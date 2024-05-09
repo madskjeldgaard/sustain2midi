@@ -2,6 +2,8 @@
 
 # Sustain2Midi
 
+![the hardware](pico.jpg) 
+
 This project is a simple Sustain pedal to midi note converter based on a raspberry pi pico board.
 
 ## Features
