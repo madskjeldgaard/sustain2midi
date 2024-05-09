@@ -4,6 +4,9 @@
 #include <Bounce2.h>
 Bounce2::Button sustainPedal1 = Bounce2::Button();
 
+#include <arduino-timer.h>
+auto timer = timer_create_default();
+
 #define SUS2MIDI_NEOPIXEL = true
 
 constexpr auto SUSTAIN_PIN = 0;
@@ -16,7 +19,7 @@ constexpr auto INTERVAL_IN_MS = 5;
 
 #ifdef SUS2MIDI_NEOPIXEL
 #include <Adafruit_NeoPixel.h>
-constexpr auto LED_BRIGHTNESS = 20; // Set LED brightness (0-255)
+constexpr auto LED_BRIGHTNESS = 100; // Set LED brightness (0-255)
 constexpr auto LED_PIN = 5; // Change this to your LED pin
 constexpr auto NUM_LEDS = 1; // Change this to the number of LEDs
 // NeoPixel object
@@ -83,6 +86,18 @@ void handle_midi_note_on(byte channel, byte note, byte velocity) {
   red_value = map(output_note, 0, 127, 255, 0);
   green_value = map(output_note, 0, 127, 0, 255);
 #endif
+
+// Briefly flash the LED to indicate the new note
+
+#ifdef SUS2MIDI_NEOPIXEL
+
+  update_led(true);
+  timer.in(150, [](void *) -> bool {
+    update_led(false);
+    return false;
+  });
+
+#endif
 }
 
 void setup() {
@@ -118,4 +133,5 @@ void setup() {
 void loop() {
   handle_sustain();
   MIDI.read(); // Add this line to read incoming MIDI messages
+  timer.tick();
 }
