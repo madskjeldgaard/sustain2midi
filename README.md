@@ -1,16 +1,14 @@
 [![PlatformIO CI](https://github.com/madskjeldgaard/raspberry-pi-pico-usbmidi-platformio-template/actions/workflows/build.yml/badge.svg)](https://github.com/madskjeldgaard/raspberry-pi-pico-usbmidi-platformio-template/actions/workflows/build.yml)
 
-# Raspberry Pi Pico platformio template
+# Sustain2Midi
 
-This is a simple template for creating an Arduino-based project for the Raspberry Pi Pico using platformio.
+This project is a simple Sustain pedal to midi note converter based on a raspberry pi pico board.
 
-It includes a simple example of using USB midi in this environment to easily create midi controllers from the Pico.
+## Features
 
-Also, it's set up to use c++17 instead of the default c++11 version.
-
-The advantage of working with the Pico like this is that you are able to use it like any other Arduino enabled board basically. For more information, [see this link](https://arduino-pico.readthedocs.io/en/latest/index.html).
-
-Best of all though? You can upload to the board without having to plug/unplug the device while pressing the boot button.
+- Dirt cheap (all you need is a mono jack socket and a raspberry pi pico)
+- Sends note on/off
+- Note number can be changed easily by sending a midi note to the device.
 
 ## Dependencies
 
