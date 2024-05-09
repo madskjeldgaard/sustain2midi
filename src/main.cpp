@@ -1,9 +1,10 @@
 #include <Adafruit_TinyUSB.h>
 #include <Arduino.h>
 #include <MIDI.h>
-
 #include <Bounce2.h>
 Bounce2::Button sustainPedal1 = Bounce2::Button();
+
+#define SUS2MIDI_NEOPIXEL = true
 
 constexpr auto SUSTAIN_PIN = 0;
 constexpr auto MIDI_VELOCITY = 127;
@@ -13,12 +14,36 @@ constexpr auto PIN = SUSTAIN_PIN;
 constexpr auto PIN_MODE = INPUT_PULLUP;
 constexpr auto INTERVAL_IN_MS = 5;
 
+#ifdef SUS2MIDI_NEOPIXEL
+#include <Adafruit_NeoPixel.h>
+constexpr auto LED_BRIGHTNESS = 20; // Set LED brightness (0-255)
+constexpr auto LED_PIN = 5; // Change this to your LED pin
+constexpr auto NUM_LEDS = 1; // Change this to the number of LEDs
+// NeoPixel object
+Adafruit_NeoPixel strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800);
+#endif
+
 // USB MIDI object
 Adafruit_USBD_MIDI usbMidi;
 MIDI_CREATE_INSTANCE(Adafruit_USBD_MIDI, usbMidi, MIDI);
 
-static bool toggle_state1 = false;
+static bool toggle_state1 = true;
+
+#ifdef SUS2MIDI_NEOPIXEL
 static int output_note = 48; // Default output note
+static int red_value = 0; // Red color value
+static int green_value = 0; // Green color value
+
+void update_led(bool is_on) {
+  if (is_on) {
+    strip.setPixelColor(0, strip.Color(red_value, green_value, 0));
+  } else {
+    strip.setPixelColor(0, strip.Color(0, 0, 0)); // Turn off LED
+  }
+  strip.show(); // Update LED
+}
+
+#endif
 
 void handle_sustain() {
   sustainPedal1.update();
@@ -31,6 +56,10 @@ void handle_sustain() {
       MIDI.sendNoteOff(output_note, 0, TO_CHANNEL);
     }
 
+    #ifdef SUS2MIDI_NEOPIXEL
+    update_led(toggle_state1);
+    #endif
+
     toggle_state1 = !toggle_state1;
   }
 }
@@ -41,10 +70,19 @@ void handle_midi_note_on(byte channel, byte note, byte velocity) {
 
   if (toggle_state1) {
     MIDI.sendNoteOff(output_note, 0, TO_CHANNEL);
+    #ifdef SUS2MIDI_NEOPIXEL
+    update_led(false);
+#endif
   }
 
   toggle_state1 = false;
   output_note = note;
+
+  #ifdef SUS2MIDI_NEOPIXEL
+  // Map note number to red and green color values
+  red_value = map(output_note, 0, 127, 255, 0);
+  green_value = map(output_note, 0, 127, 0, 255);
+#endif
 }
 
 void setup() {
@@ -63,6 +101,18 @@ void setup() {
   sustainPedal1.attach(PIN, PIN_MODE);
   sustainPedal1.interval(INTERVAL_IN_MS);
   sustainPedal1.setPressedState(LOW);
+  sustainPedal1.update();
+
+  // Update button state to initialize toggle state
+  #ifdef SUS2MIDI_NEOPIXEL
+  // Initialize NeoPixel strip
+  strip.begin();
+  strip.setBrightness(LED_BRIGHTNESS); // Set LED brightness
+  // Map note number to red and green color values
+  red_value = map(output_note, 0, 127, 255, 0);
+  green_value = map(output_note, 0, 127, 0, 255);
+  strip.show(); // Initialize all pixels to 'off'
+#endif
 }
 
 void loop() {
