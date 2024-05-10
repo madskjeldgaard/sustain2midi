@@ -137,7 +137,7 @@ void setup() {
 }
 
 void loop() {
+  MIDI.read();
   handle_sustain();
-  MIDI.read(); // Add this line to read incoming MIDI messages
   timer.tick();
 }
