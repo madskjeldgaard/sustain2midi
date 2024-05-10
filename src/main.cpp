@@ -51,7 +51,7 @@ void update_led(bool is_on) {
 void handle_sustain() {
   sustainPedal1.update();
 
-  if (sustainPedal1.pressed()) {
+  if (sustainPedal1.released()) {
 
     if (toggle_state1) {
       MIDI.sendNoteOn(output_note, MIDI_VELOCITY, TO_CHANNEL);
