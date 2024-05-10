@@ -111,6 +111,12 @@ void setup() {
 
   // Set the MIDI note on handling function
   MIDI.setHandleNoteOn(handle_midi_note_on);
+  MIDI.setHandleNoteOff([](byte channel, byte note, byte velocity) {
+    // Do nothing
+  });
+
+  // Turn midi thru off
+  MIDI.turnThruOff();
 
   // Setup button
   sustainPedal1.attach(PIN, PIN_MODE);
