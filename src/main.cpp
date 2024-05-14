@@ -6,8 +6,11 @@ Bounce2::Button sustainPedal1 = Bounce2::Button();
 
 #include <arduino-timer.h>
 auto timer = timer_create_default();
+Timer<1, micros>
+    led_timer; // create a timer with 1 task and microsecond resolution
 
 #define SUS2MIDI_NEOPIXEL = true
+#define DEBUG = false
 
 constexpr auto SUSTAIN_PIN = 0;
 constexpr auto MIDI_VELOCITY = 127;
@@ -53,6 +56,12 @@ void handle_sustain() {
 
   if (sustainPedal1.released()) {
 
+#ifdef DEBUG
+    Serial.println("Sustain pedal released");
+    Serial.println("Toggle state is: ");
+    Serial.println(toggle_state1 ? "on" : "off");
+#endif
+
     if (toggle_state1) {
       MIDI.sendNoteOn(output_note, MIDI_VELOCITY, TO_CHANNEL);
     } else {
@@ -70,27 +79,26 @@ void handle_sustain() {
 void handle_midi_note_on(byte channel, byte note, byte velocity) {
 
   // Send note off and reset toggle state before changing note
-
   if (toggle_state1) {
-    MIDI.sendNoteOff(output_note, 0, TO_CHANNEL);
-#ifdef SUS2MIDI_NEOPIXEL
-    update_led(false);
+#ifdef DEBUG
+    Serial.println("Toggle state is on, sending note off just in case");
 #endif
+    MIDI.sendNoteOff(output_note, 0, TO_CHANNEL);
   }
 
-  toggle_state1 = false;
+  sustainPedal1.update();
+#ifdef DEBUG
+  Serial.print("Received note on: ");
+  Serial.println(note);
+#endif
   output_note = note;
 
 #ifdef SUS2MIDI_NEOPIXEL
   // Map note number to red and green color values
   red_value = map(output_note, 0, 127, 255, 0);
   green_value = map(output_note, 0, 127, 0, 255);
-#endif
 
   // Briefly flash the LED to indicate the new note
-
-#ifdef SUS2MIDI_NEOPIXEL
-
   update_led(true);
   timer.in(150, [](void *) -> bool {
     update_led(false);
@@ -102,6 +110,11 @@ void handle_midi_note_on(byte channel, byte note, byte velocity) {
 
 void setup() {
   Serial.begin(115200);
+
+#ifdef DEBUG
+  Serial.println("Sustain2Midi");
+  Serial.println("Initializing...");
+#endif
 
   TinyUSBDevice.setManufacturerDescriptor("MadsKjeldgaard");
   TinyUSBDevice.setProductDescriptor("Sustain2Midi");
